@@ -50,7 +50,13 @@ app.post('/frames', (req, res) => {
 
 
     var { vehicle_id, arbitration_id, data_len, data_string } = req.body;
-    var frame = { vehicle_id, arbitration_id, data_len, data_string };
+    var frame = {
+        vehicle_id,
+        arbitration_id,
+        data_len,
+        data_string,
+        time_received: new Date()
+    };
 
     // Just use vehicle ID as collection name for now
     const collection = db.collection("vehicle_" + String(frame['vehicle_id']));
