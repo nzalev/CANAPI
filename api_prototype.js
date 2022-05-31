@@ -1,5 +1,7 @@
 'use strict'
 
+/* remember to run export NODE_ENV=production */
+
 const express = require('express')
 
 const { MongoClient } = require('mongodb');
@@ -58,4 +60,4 @@ app.post('/frames', (req, res) => {
     return res.send('ack\n');
 });
 
-app.listen(3000)
+app.listen(3000, 'localhost');
