@@ -33,7 +33,8 @@ function checkNulls(body, propertyList) {
 
 
 var app = express()
-app.use(express.json());
+app.use(express.json({limit: '50mb'}));
+
 
 app.post('/frames', (req, res) => {
 
@@ -89,12 +90,17 @@ app.post('/frames/bulk', (req, res) => {
             return res.send('Missing parameters\n');
         }
 
-        var { vehicle_id, arbitration_id, data_len, data_string } = f;
+        var { vehicle_id, arbitration_id, data_len, data_string, time_recorded } = f;
+
+        var record_date = new Date(0);
+        record_date.setUTCSeconds(time_recorded);
+
         var frame = {
             vehicle_id,
             arbitration_id,
             data_len,
             data_string,
+            time_recorded: record_date,
             time_received: time_received
         };
         frame_list.push(frame);
@@ -107,7 +113,7 @@ app.post('/frames/bulk', (req, res) => {
     } catch (e) {
         console.log(e);
         res.status(500);
-        res.send('err\n');
+        return res.send('err\n');
     }
 
     res.status(200);
