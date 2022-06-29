@@ -35,7 +35,6 @@ function checkNulls(body, propertyList) {
 var app = express()
 app.use(express.json({limit: '50mb'}));
 
-
 app.post('/frames', (req, res) => {
 
     if ( ! checkAPIKey(req) ) {
@@ -118,6 +117,20 @@ app.post('/frames/bulk', (req, res) => {
 
     res.status(200);
     res.send('ack\n');
+});
+
+
+// Error middleware
+
+app.use((err, req, res, next) => {
+    
+    // Silence the stack trace - this is an expected behaviour
+    if (err.type === 'entity.too.large') {
+        res.status(413);
+        res.send('');
+    } else {
+        next(err);
+    }
 });
 
 
