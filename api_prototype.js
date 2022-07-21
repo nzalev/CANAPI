@@ -73,7 +73,7 @@ app.post('/frames/bulk', (req, res) => {
         return res.send('Forbidden\n');
     }
 
-    if (req.body.length == undefined) {
+    if (req.body.length == undefined || req.body.length == 0) {
         res.status(400);
         return res.send('Invalid Format\n');
     }
