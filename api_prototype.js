@@ -33,7 +33,7 @@ function checkNulls(body, propertyList) {
 
 
 var app = express()
-app.use(express.json({limit: '50mb'}));
+app.use(express.json({limit: '50mb', inflate: true}));
 
 app.post('/frames', (req, res) => {
 
@@ -117,6 +117,77 @@ app.post('/frames/bulk', (req, res) => {
 
     res.status(200);
     res.send('ack\n');
+});
+
+app.post('/compressedframes', (req, res) => {
+
+    if ( ! checkAPIKey(req) ) {
+        res.status(403);
+        return res.send('Forbidden\n');
+    }
+
+    if ( ! checkNulls(req.body,
+            ['vehicle_id', 'frames']) ) {
+        res.status(400);
+        return res.send('Missing\n');
+    }
+
+    var frame_list = [];
+    var time_received = new Date();
+
+    var { vehicle_id, frames } = req.body;
+
+    if (frames.length == undefined || frames.length == 0) {
+        res.status(400);
+        return res.send('Invalid Format\n');
+    }
+
+    // frames: array of b64 encoded packed frames
+    /* packing:
+        u_short  u_char  u_longlong  double
+        aid      len     data        time
+    */
+    frames.forEach(f => {
+        var buffer = Buffer.from(f, 'base64');
+
+        var arbitration_id =  buffer.readUInt16LE(0);
+        var data_len = buffer.readUInt8(2);
+        var time_d = buffer.readDoubleLE(11);
+
+        var record_date = new Date(0);
+        record_date.setUTCSeconds(time_d);
+
+        var data_bytes = buffer.slice(3, 3 + data_len);
+        var hex = [];
+        data_bytes.forEach(byte => {
+            hex.push( byte.toString(16).toUpperCase().padStart(2, '0') );
+        });
+        var data_string = hex.join(' ');
+
+
+        var frame = {
+            vehicle_id,
+            arbitration_id,
+            data_len,
+            data_string,
+            time_recorded: record_date,
+            time_received: time_received
+        };
+
+        frame_list.push(frame);
+    });
+
+    try {
+        const collection = db.collection("vehicle_" + String(vehicle_id));
+        collection.insertMany(frame_list);
+    } catch (e) {
+        console.log(e);
+        res.status(500);
+        return res.send('err\n');
+    }
+
+    res.status(200);
+    return res.send('ack\n');
 });
 
 
