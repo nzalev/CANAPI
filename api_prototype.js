@@ -11,7 +11,7 @@ client.connect();
 const db = client.db('canmsgs');
 
 
-const API_KEY = 'YdCsCdCh5eFE9Aq4gopdo'
+const API_KEY = ''
 
 
 function checkAPIKey(req) {
